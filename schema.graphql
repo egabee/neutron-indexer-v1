@@ -1,0 +1,7 @@
+
+# We keep this to satify the subquery cli
+type Block @entity {
+  id: ID! # The block hash
+  height: BigInt!
+}
+
