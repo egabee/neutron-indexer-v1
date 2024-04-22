@@ -22,8 +22,8 @@ const project: CosmosProject = {
   dataSources: [
     {
       kind: CosmosDatasourceKind.Runtime,
-      startBlock: 9000000,
-      
+      startBlock: 9000266,
+      // endBlock:900267,
       mapping: {
         file: './dist/index.js',
         handlers: [
@@ -1076,6 +1076,17 @@ const project: CosmosProject = {
       ['google.protobuf.Duration', { file: './proto/google/protobuf/duration.proto', messages: ['Duration'] }],
       ['google.protobuf.Timestamp', { file: './proto/google/protobuf/timestamp.proto', messages: ['Timestamp'] }],
 
+      
+      // =====================================================
+      // ---------------------- Neutron --------------------
+      // =====================================================
+      [
+        '/transfer.v1.tx',
+        {
+          file: './proto/transfer/v1/tx.proto',
+          messages: ['MsgTransfer'],
+        },
+      ],
       
       
     ]),
