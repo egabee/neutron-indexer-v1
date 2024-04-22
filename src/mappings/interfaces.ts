@@ -1,3 +1,4 @@
+// import { Fee } from 'cosmjs-types/cosmos/tx/v1beta1/tx'
 import { Any as ProtoAny } from '../types/proto-interfaces/google/protobuf/any'
 
 type Any = Record<string, any>
@@ -27,21 +28,32 @@ export interface EventLog {
   type: string
   attributes: { key: string; value: string }[]
 }
-
 export interface TransactionObject {
   id: string
-  //Events emitted from the transaction
+  // Events emitted from the transaction
   events: any
-  //" Messages included in transaction body - saved as json string "
+  // Messages included in transaction body - saved as json string
   messages: GenericMessage[]
   log: any
   success: boolean
   gasUsed: string
   gasWanted: string
-  //" Block number in which the balance was last modified "
+  // Block number in which the balance was last modified
   blockNumber: number
-  // "Timestamp in which the balance was last modified "
+  // Timestamp in which the balance was last modified
   timestamp: string
+  chainId: string
+  memo: string
+  authInfo: CustomAuthInfo
+  signatures: string
+  timeoutHeight: string
+  extensionOptions?: ExtensionOptions[]
+  nonCriticalExtensionOptions?: NonCriticalExtensionOptions[]
+}
+
+export interface CustomAuthInfo {
+  signerInfos: { pubKey: string; sequence: string; modeInfo: any }[]
+  fee?: any
 }
 
 export interface TransactionTopic {
@@ -55,4 +67,16 @@ export interface CosmosDecodedMessage {
   msg?: Uint8Array
   allowance?: ProtoAny
   [key: string]: any // Add other possible properties
+}
+
+export interface ExtensionOptions {
+  type: string
+  value: any
+}
+
+export interface NonCriticalExtensionOptions extends ExtensionOptions { }
+
+export interface TxExtensions {
+  extensionOptions: ExtensionOptions[]
+  nonCriticalExtensionOptions: NonCriticalExtensionOptions[]
 }
