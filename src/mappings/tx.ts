@@ -13,7 +13,6 @@ export async function handleTx(tx: CosmosTransaction): Promise<void> {
   // if (!iggyProducer) {
   //   iggyProducer = await IggyProducer.create(process.env.IGGY_URL!)
   // }
-
   const { height } = tx.block.header
 
   const messages: GenericMessage[] = []
@@ -60,7 +59,6 @@ export async function handleTx(tx: CosmosTransaction): Promise<void> {
  */
 function decodeNestedMessages(decodedMessage: any, originalMessage: ProtoAny, block: number): GenericMessage {
   const { typeUrl } = originalMessage
-
   if (
     [
       '/cosmwasm.wasm.v1.MsgExecuteContract',
@@ -146,8 +144,8 @@ function createTransactionObject(
   const txEvents: EventLog[] = events.map(({ type, attributes }: any) => ({
     type,
     attributes: attributes.map(({ key, value }: any) => ({
-      key: decodeBase64IfEncoded(key),
-      value: decodeBase64IfEncoded(value),
+      key: key,
+      value: value,
     })),
   }))
 

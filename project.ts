@@ -22,7 +22,7 @@ const project: CosmosProject = {
   dataSources: [
     {
       kind: CosmosDatasourceKind.Runtime,
-      startBlock: 9000266,
+      startBlock: 9000100,
       // endBlock:900267,
       mapping: {
         file: './dist/index.js',
@@ -1085,6 +1085,13 @@ const project: CosmosProject = {
         {
           file: './proto/transfer/v1/tx.proto',
           messages: ['MsgTransfer'],
+        },
+      ],
+      [
+        '/osmosis.tokenfactory.v1beta1',
+        {
+          file: './proto/osmosis/tokenfactory/v1beta1/tx.proto',
+          messages: ['MsgMint','MsgBurn','MsgForceTransfer','MsgChangeAdmin','MsgCreateDenom','MsgSetDenomMetadata'],
         },
       ],
       
