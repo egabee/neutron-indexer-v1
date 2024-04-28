@@ -42,7 +42,7 @@
   "dependencies": {
     "@egabee/cosmos-indexer-common": "^1.0.1",
     "@subql/cli": "^4.5.2",
-    "@subql/types-core": "^0.3.0",
+    "@subql/types-core": "^0.7.0",
     "@subql/types-cosmos": "latest",
     "@types/node": "^17.0.45",
     "cosmjs-types": "^0.9.0",
