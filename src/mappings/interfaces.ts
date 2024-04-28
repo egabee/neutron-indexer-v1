@@ -1,4 +1,4 @@
-// import { Fee } from 'cosmjs-types/cosmos/tx/v1beta1/tx'
+import { Fee } from 'cosmjs-types/cosmos/tx/v1beta1/tx'
 import { Any as ProtoAny } from '../types/proto-interfaces/google/protobuf/any'
 
 type Any = Record<string, any>
@@ -53,7 +53,7 @@ export interface TransactionObject {
 
 export interface CustomAuthInfo {
   signerInfos: { pubKey: string; sequence: string; modeInfo: any }[]
-  fee?: any
+  fee?: Fee
 }
 
 export interface TransactionTopic {
@@ -74,7 +74,7 @@ export interface ExtensionOptions {
   value: any
 }
 
-export interface NonCriticalExtensionOptions extends ExtensionOptions { }
+export interface NonCriticalExtensionOptions extends ExtensionOptions {}
 
 export interface TxExtensions {
   extensionOptions: ExtensionOptions[]

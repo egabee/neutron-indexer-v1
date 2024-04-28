@@ -1,18 +1,13 @@
 import { CosmosTransaction } from '@subql/types-cosmos'
 import { TextDecoder } from 'util'
-// import { AuthInfo, TxBody } from 'cosmjs-types/cosmos/tx/v1beta1/tx'
+import { AuthInfo, TxBody } from 'cosmjs-types/cosmos/tx/v1beta1/tx'
 
-// import { IggyProducer } from '../common/iggy-producer'
 import { Any, Any as ProtoAny } from '../types/proto-interfaces/google/protobuf/any'
-import { addToUnknownMessageTypes, decodeBase64IfEncoded, isEmptyStringObject, toJson } from '../common/utils'
+import { addToUnknownMessageTypes, isEmptyStringObject, toJson } from '../common/utils'
 import { CustomAuthInfo, EventLog, GenericMessage, TransactionObject, TxExtensions } from './interfaces'
-
-// let iggyProducer: IggyProducer
+import { sendBatchOfMessagesToKafka } from '../common/kafka-producer'
 
 export async function handleTx(tx: CosmosTransaction): Promise<void> {
-  // if (!iggyProducer) {
-  //   iggyProducer = await IggyProducer.create(process.env.IGGY_URL!)
-  // }
   const { height } = tx.block.header
 
   const messages: GenericMessage[] = []
@@ -44,10 +39,10 @@ export async function handleTx(tx: CosmosTransaction): Promise<void> {
     signatures,
     decodeExtensions(tx.decodedTx.body),
   )
+  await sendBatchOfMessagesToKafka(transaction)
 
   logger.info(`Full tx: ${toJson(transaction)}`)
 
-  // await iggyProducer.postMessage(transaction)
 }
 
 /**
@@ -59,6 +54,7 @@ export async function handleTx(tx: CosmosTransaction): Promise<void> {
  */
 function decodeNestedMessages(decodedMessage: any, originalMessage: ProtoAny, block: number): GenericMessage {
   const { typeUrl } = originalMessage
+
   if (
     [
       '/cosmwasm.wasm.v1.MsgExecuteContract',
@@ -169,7 +165,7 @@ function createTransactionObject(
   }
 }
 
-function decodeAuthInfo({ fee, signerInfos }: any): CustomAuthInfo {
+function decodeAuthInfo({ fee, signerInfos }: AuthInfo): CustomAuthInfo {
   const authSignerInfos = []
 
   for (const { publicKey: pkey, sequence, modeInfo } of signerInfos) {
@@ -203,7 +199,7 @@ function decodeAuthInfo({ fee, signerInfos }: any): CustomAuthInfo {
   }
 }
 
-function decodeExtensions(txBody: any): TxExtensions {
+function decodeExtensions(txBody: TxBody): TxExtensions {
   const extensionOptions = txBody.extensionOptions.map((ext: Any) => {
     const ty = registry.lookupType(ext.typeUrl)
     if (!ty) {
