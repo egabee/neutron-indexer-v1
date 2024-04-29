@@ -22,7 +22,8 @@ const project: CosmosProject = {
   dataSources: [
     {
       kind: CosmosDatasourceKind.Runtime,
-      startBlock: 13000000,
+      startBlock: 9481351,
+      // endBlock:900267,
       mapping: {
         file: './dist/index.js',
         handlers: [
@@ -43,7 +44,12 @@ const project: CosmosProject = {
      * When developing your project we suggest getting a private API key
      * We suggest providing an array of endpoints for increased speed and reliability
      */
-    endpoint: ['https://rpc-kralum.neutron-1.neutron.org'],
+    endpoint: ['https://rpc-kralum.neutron-1.neutron.org'
+      // , "https://rpc.neutron.nodestake.top",
+      //   "https://neutron-rpc.lavenderfive.com",
+      //   "https://rpc-neutron.whispernode.com","https://neutron-rpc.publicnode.com:443"
+    ],
+
     chainId: 'neutron-1',
     chaintypes: new Map([
       // =====================================================
@@ -96,6 +102,13 @@ const project: CosmosProject = {
         {
           file: './proto/cosmos/bank/v1beta1/bank.proto',
           messages: ['Input', 'Output', 'Params', 'SendEnabled', 'Supply', 'DenomUnit', 'Metadata'],
+        },
+      ],
+      [
+        'cosmos.bank.v1beta1.authz',
+        {
+          file: './proto/cosmos/bank/v1beta1/authz.proto',
+          messages: ['SendAuthorization'],
         },
       ],
       // =====================================================
@@ -169,6 +182,13 @@ const project: CosmosProject = {
         'cosmos.crypto.ed.keys',
         {
           file: './proto/cosmos/crypto/ed25519/keys.proto',
+          messages: ['PubKey', 'PrivKey'],
+        },
+      ],
+      [
+        'cosmos.crypto.secp256k1.keys',
+        {
+          file: './proto/cosmos/crypto/secp256k1/keys.proto',
           messages: ['PubKey', 'PrivKey'],
         },
       ],
@@ -1057,6 +1077,27 @@ const project: CosmosProject = {
       ['google.protobuf.Any', { file: './proto/google/protobuf/any.proto', messages: ['Any'] }],
       ['google.protobuf.Duration', { file: './proto/google/protobuf/duration.proto', messages: ['Duration'] }],
       ['google.protobuf.Timestamp', { file: './proto/google/protobuf/timestamp.proto', messages: ['Timestamp'] }],
+
+
+      // =====================================================
+      // ---------------------- Neutron --------------------
+      // =====================================================
+      [
+        '/transfer.v1.tx',
+        {
+          file: './proto/transfer/v1/tx.proto',
+          messages: ['MsgTransfer'],
+        },
+      ],
+      [
+        '/osmosis.tokenfactory.v1beta1',
+        {
+          file: './proto/osmosis/tokenfactory/v1beta1/tx.proto',
+          messages: ['MsgMint', 'MsgBurn', 'MsgForceTransfer', 'MsgChangeAdmin', 'MsgCreateDenom', 'MsgSetDenomMetadata'],
+        },
+      ],
+
+
     ]),
   },
 }

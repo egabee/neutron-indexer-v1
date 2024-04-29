@@ -1,15 +1,14 @@
 import { CosmosTransaction } from '@subql/types-cosmos'
 import { TextDecoder } from 'util'
+import { AuthInfo, TxBody } from 'cosmjs-types/cosmos/tx/v1beta1/tx'
 
-import { Any as ProtoAny } from '../types/proto-interfaces/google/protobuf/any'
-import { TOPIC_MESSAGE } from '../common/constants'
-import { sendBatchOfMessagesToKafka } from '../common/kafka-producer'
-import { addToUnknownMessageTypes, isEmptyStringObject, toJson } from '../common/utils'
-import { EventLog, GenericMessage, TransactionObject } from './interfaces'
+import { Any, Any as ProtoAny } from '../types/proto-interfaces/google/protobuf/any'
+import { addToUnknownMessageTypes, isEmptyStringObject, toJson } from '@egabee/cosmos-indexer-common/lib/utils'
+import { CustomAuthInfo, EventLog, GenericMessage, TransactionObject, TxExtensions } from '@egabee/cosmos-indexer-common/lib/interfaces'
+import { sendBatchOfMessagesToKafka } from '@egabee/cosmos-indexer-common/lib/kafka'
 
 export async function handleTx(tx: CosmosTransaction): Promise<void> {
   const { height } = tx.block.header
-  logger.info(`-------- ${height} -----------`)
 
   const messages: GenericMessage[] = []
 
@@ -17,7 +16,7 @@ export async function handleTx(tx: CosmosTransaction): Promise<void> {
     const knownType = registry.lookupType(typeUrl)
 
     if (!knownType || isEmptyStringObject(knownType)) {
-      addToUnknownMessageTypes({ type: typeUrl, blocks: [height] })
+      addToUnknownMessageTypes({ type: typeUrl, blocks: [height] },logger)
       continue
     }
 
@@ -29,9 +28,21 @@ export async function handleTx(tx: CosmosTransaction): Promise<void> {
     }
   }
 
-  const transaction = createTransactionObject(tx, messages)
-  await sendBatchOfMessagesToKafka({ topic: TOPIC_MESSAGE, message: transaction })
+  const signatures = Buffer.from(
+    new Uint8Array(tx.decodedTx.signatures.flatMap((signature) => Array.from(signature))),
+  ).toString('base64')
+
+  const transaction = createTransactionObject(
+    tx,
+    messages,
+    decodeAuthInfo(tx.decodedTx.authInfo),
+    signatures,
+    decodeExtensions(tx.decodedTx.body),
+  )
+  await sendBatchOfMessagesToKafka(transaction)
+
   logger.info(`Full tx: ${toJson(transaction)}`)
+
 }
 
 /**
@@ -96,7 +107,7 @@ function tryDecodeMessage({ typeUrl, value }: ProtoAny, block: number): any {
   const knownType = registry.lookupType(typeUrl)
 
   if (!knownType || isEmptyStringObject(knownType)) {
-    addToUnknownMessageTypes({ type: typeUrl, blocks: [block] })
+    addToUnknownMessageTypes({ type: typeUrl, blocks: [block] },logger)
     throw new Error(`Unknown type detected. Type url: ${typeUrl}`)
   }
 
@@ -114,7 +125,13 @@ function tryDecodeMessage({ typeUrl, value }: ProtoAny, block: number): any {
  * @param messages GenericMessage[]
  * @returns TransactionObject
  */
-function createTransactionObject(cosmosTx: CosmosTransaction, messages: GenericMessage[]): TransactionObject {
+function createTransactionObject(
+  cosmosTx: CosmosTransaction,
+  messages: GenericMessage[],
+  authInfo: CustomAuthInfo,
+  signatures: string,
+  extentions: TxExtensions,
+): TransactionObject {
   const {
     tx: { events, gasUsed, gasWanted, log, code },
     block: { header },
@@ -138,5 +155,68 @@ function createTransactionObject(cosmosTx: CosmosTransaction, messages: GenericM
     success: code === 0,
     blockNumber: header.height,
     timestamp: BigInt(header.time.valueOf()).toString(),
+    chainId: header.chainId,
+    authInfo,
+    signatures,
+    memo: cosmosTx.decodedTx.body.memo,
+    timeoutHeight: cosmosTx.decodedTx.body.timeoutHeight.toString(),
+    extensionOptions: extentions.extensionOptions,
+    nonCriticalExtensionOptions: extentions.nonCriticalExtensionOptions,
   }
+}
+
+function decodeAuthInfo({ fee, signerInfos }: AuthInfo): CustomAuthInfo {
+  const authSignerInfos = []
+
+  for (const { publicKey: pkey, sequence, modeInfo } of signerInfos) {
+    let pubKeyValue
+
+    if (pkey) {
+      const msgType = registry.lookupType(pkey.typeUrl)
+      if (!msgType) {
+        throw new Error(`Message type not found for pubKey.typeUrl = ${pkey.typeUrl}`)
+      }
+
+      pubKeyValue = msgType.decode(pkey.value)
+    }
+
+    try {
+      pubKeyValue = pubKeyValue ? JSON.parse(JSON.stringify(pubKeyValue)) : {}
+    } catch (err) {
+      logger.error(`JSON ser/deser public key error. Reason ${toJson(err)}`)
+    }
+
+    authSignerInfos.push({
+      pubKey: { ...pubKeyValue, type: pkey?.typeUrl },
+      sequence: sequence.toString(),
+      modeInfo,
+    })
+  }
+
+  return {
+    signerInfos: authSignerInfos,
+    fee,
+  }
+}
+
+function decodeExtensions(txBody: TxBody): TxExtensions {
+  const extensionOptions = txBody.extensionOptions.map((ext: Any) => {
+    const ty = registry.lookupType(ext.typeUrl)
+    if (!ty) {
+      throw new Error(`Unknown type detected for extensionOptions ${ext.typeUrl}`)
+    }
+
+    return { type: ext.typeUrl, value: ty.decode(ext.value) }
+  })
+
+  const nonCriticalExtensionOptions = txBody.nonCriticalExtensionOptions.map((ext: Any) => {
+    const ty = registry.lookupType(ext.typeUrl)
+    if (!ty) {
+      throw new Error(`Unknown type detected for extensionOptions ${ext.typeUrl}`)
+    }
+
+    return { type: ext.typeUrl, value: ty.decode(ext.value) }
+  })
+
+  return { extensionOptions, nonCriticalExtensionOptions }
 }
