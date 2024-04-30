@@ -22,7 +22,7 @@ const project: CosmosProject = {
   dataSources: [
     {
       kind: CosmosDatasourceKind.Runtime,
-      startBlock: 9481351,
+      startBlock: 4945020,
       // endBlock:900267,
       mapping: {
         file: './dist/index.js',
@@ -44,13 +44,9 @@ const project: CosmosProject = {
      * When developing your project we suggest getting a private API key
      * We suggest providing an array of endpoints for increased speed and reliability
      */
-    endpoint: ['https://rpc-kralum.neutron-1.neutron.org'
-      // , "https://rpc.neutron.nodestake.top",
-      //   "https://neutron-rpc.lavenderfive.com",
-      //   "https://rpc-neutron.whispernode.com","https://neutron-rpc.publicnode.com:443"
-    ],
+    endpoint: ['https://rpc-falcron.pion-1.ntrn.tech'],
 
-    chainId: 'neutron-1',
+    chainId: 'pion-1',
     chaintypes: new Map([
       // =====================================================
       //------------------------ auth ------------------------
