@@ -11,7 +11,7 @@ import {
   TransactionObject,
   TxExtensions,
 } from '@egabee/cosmos-indexer-common/lib/interfaces'
-import { sendBatchOfMessagesToKafka } from '@egabee/cosmos-indexer-common/lib/kafka'
+// import { sendBatchOfMessagesToKafka } from '@egabee/cosmos-indexer-common/lib/kafka'
 
 export async function handleTx(tx: CosmosTransaction): Promise<void> {
   const { height } = tx.block.header
@@ -45,7 +45,7 @@ export async function handleTx(tx: CosmosTransaction): Promise<void> {
     signatures,
     decodeExtensions(tx.decodedTx.body),
   )
-  await sendBatchOfMessagesToKafka(transaction)
+  // await sendBatchOfMessagesToKafka(transaction)
 
   logger.info(`Full tx: ${toJson(transaction)}`)
 }
