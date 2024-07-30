@@ -1,25 +1,20 @@
-# Indexer Template
+# Neutron Testnet Indexer
 
 This template can be used to build indexer for cosmos chains.
 
 ## Build and Run
 
 ```bash
-# install SubQuery CLI
-pnpm i -g @subql/cli
 
 # install dependencies
-pnpm i
-
-# Copy proto definitions
-pnpm cp:proto
+bun i
 
 # generate typescript types
-pnpm codegen
+bun run codegen
 
 # build the project
-pnpm build
+bun run build
 
 # run with docker
-pnpm start:docker
+bun run start:docker
 ```
